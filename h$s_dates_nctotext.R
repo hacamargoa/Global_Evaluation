@@ -1,77 +1,107 @@
 
 library("rgdal")
-library("raster")
+library(raster)
 library(ncdf4)
 library(sp)
 library(rasterVis)
 library(maptools)
 library(maps)
-setwd("C:/users/HAC809/Documents/Hector/Project/HI evaluation/dates")
 
-#Rasterizing the tif files
+setwd("C:/Users/Hector/Desktop/hsdates")
+getwd
+#inspect the netcdf
+
+wwheati<-nc_open('wwh_ir_growing_season_dates_v2.nc4')
+w<-"wwh_ir_growing_season_dates_v2.nc4"
+print(wwheati)
+summary(wwheati)
+
+#Rasterizing the tif files winter wheat irrigated
 raster_wir<-list()
 var<-list("harvest day","planting day","growing season length")
 for(i in 1:length(var)){
-raster_wir[[i]]<-brick("Wheat_ir_growing_season_dates_v1.23.nc4",varname=var[[i]])
+raster_wir[[i]]<-brick("wwh_ir_growing_season_dates_v2.nc4",varname=var[[i]])
 rast_wir<-stack(raster_wir)
 }
 
-df1<-as.data.frame(rast_wir, xy=T)
-colnames(df1)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+plot(raster_wir[[3]])
+dfwwi<-as.data.frame(rast_wir, xy=T)
+colnames(dfwwi)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfwwi)
 
-#Rasterizing the tif files
+#Rasterizing the tif files winter wheat rainfed
 raster_wrf<-list()
 var<-list("harvest day","planting day","growing season length")
 for(i in 1:length(var)){
-  raster_wrf[[i]]<-brick("Wheat_rf_growing_season_dates_v1.23.nc4",varname=var[[i]])
+  raster_wrf[[i]]<-brick("wwh_rf_growing_season_dates_v2.nc4",varname=var[[i]])
   rast_wrf<-stack(raster_wrf)
 }
 
-df2<-as.data.frame(rast_wrf, xy=T)
-colnames(df2)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+plot(rast_wrf[[3]])
+dfwwr<-as.data.frame(rast_wrf, xy=T)
+colnames(dfwwr)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfwwr)
 
-#Rasterizing the tif files
-raster_cir<-list()
+#Rasterizing the tif files spring wheat irrigated
+raster_swir<-list()
 var<-list("harvest day","planting day","growing season length")
 for(i in 1:length(var)){
-  raster_cir[[i]]<-brick("Maize_ir_growing_season_dates_v1.23.nc4",varname=var[[i]])
-  rast_cir<-stack(raster_cir)
+  raster_swir[[i]]<-brick("swh_ir_growing_season_dates_v2.nc4",varname=var[[i]])
+  rast_swir<-stack(raster_swir)
 }
-df3<-as.data.frame(rast_cir, xy=T)
-colnames(df3)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
 
-#Rasterizing the tif files
-raster_crf<-list()
+plot(rast_swir[[3]])
+dfswi<-as.data.frame(rast_swir, xy=T)
+colnames(dfswi)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfswi)
+
+#Rasterizing the tif files spring wheat rainfed
+raster_swrf<-list()
 var<-list("harvest day","planting day","growing season length")
 for(i in 1:length(var)){
-  raster_crf[[i]]<-brick("Maize_rf_growing_season_dates_v1.23.nc4",varname=var[[i]])
-  rast_crf<-stack(raster_crf)
+  raster_swrf[[i]]<-brick("swh_rf_growing_season_dates_v2.nc4",varname=var[[i]])
+  rast_swrf<-stack(raster_swrf)
 }
-df4<-as.data.frame(rast_crf, xy=T)
-colnames(df4)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+
+plot(rast_swrf[[3]])
+dfswr<-as.data.frame(rast_swrf, xy=T)
+colnames(dfswr)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfswr)
+
+
+#Rasterizing the tif files
+raster_mir<-list()
+for(i in 1:length(var)){
+  raster_mir[[i]]<-brick("Maize_ir_growing_season_dates_v1.25.nc4",varname=var[[i]])
+  rast_mir<-stack(raster_mir)
+}
+
+plot(rast_mir[[3]])
+dfmir<-as.data.frame(rast_mir, xy=T)
+colnames(dfmir)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfmir)
+
+#Rasterizing the tif files
+raster_mrf<-list()
+for(i in 1:length(var)){
+  raster_mrf[[i]]<-brick("Maize_rf_growing_season_dates_v1.25.nc4",varname=var[[i]])
+  rast_mrf<-stack(raster_mrf)
+}
+plot(rast_mrf[[3]])
+dfmrf<-as.data.frame(rast_mrf, xy=T)
+colnames(dfmrf)<-c("Lon", "Lat","harvest_day","planting_day","grow_seas_length")
+summary(dfmrf)
 
 #/////Sewing date/////
-sdates<-data.frame(df2$Lon,df2$Lat,df2$planting_day,df4$planting_day,df1$planting_day,df3$planting_day)
+sdates<-data.frame(dfwwi$Lon,dfwwi$Lat,dfwwr$planting_day,dfwwi$planting_day,dfswr$planting_day,dfswi$planting_day,dfmrf$planting_day,dfmir$planting_day)
 head(sdates)
-colnames(sdates)<-c("Lon","Lat","TeWW","TeCo","TeWWi","TeCoi")
-sdates<-sdates[c(-3,-5)]
-sw=read.table("sdates.txt",h=T)
-head(sw)
-sw<-sw[c(-5,-8,-9,-10,-11)]
-sdate<-merge(sdates,sw,all=TRUE)
-head(sdate)
-write.csv(sdate,"sdates.csv")
+colnames(sdates)<-c("Lon","Lat","TeWW","TeWWi","TeSW","TeSWi","TeCo","TeCoi")
+write.csv(sdates,"sdates.csv")
 
 #//////Harvest dates///////
-hdates<-data.frame(df2$Lon,df2$Lat,df2$harvest_day,df4$harvest_day,df1$harvest_day,df3$harvest_day)
+hdates<-data.frame(dfwwi$Lon,dfwwi$Lat,dfwwr$harvest_day,dfwwi$harvest_day,dfswr$harvest_day,dfswi$harvest_day,dfmrf$harvest_day,dfmir$harvest_day)
 head(hdates)
-colnames(hdates)<-c("Lon","Lat","TeWW","TeCo","TeWWi","TeCoi")
-hdates<-hdates[c(-3,-5)]
-hw=read.table("hdates.txt",h=T)
-head(hw)
-hw<-hw[c(-5,-8,-9,-10,-11)]
-hdate<-merge(hdates,hw,all=TRUE)
-head(hdate)
-write.csv(hdate,"hdates.csv")
+colnames(hdates)<-c("Lon","Lat","TeWW","TeWWi","TeSW","TeSWi","TeCo","TeCoi")
+write.csv(hdates,"hdates.csv")
 
 
