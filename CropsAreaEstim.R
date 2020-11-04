@@ -1,12 +1,10 @@
 #source("Z:/Scripts/Global_evaluation/Global_Evaluation/SpamAreasInput.R")
-install.packages("rlist")
-install.packages("raster")
-library("ncdf4")
-library("raster")
-library(rgdal)
+library(ncdf4)
+library(raster)
 library(rlist)
 
 #Calling the area database from SPAM and adding irrigated and rainfed per crop
+Ye_Ar<-list()
 for(i in 1:7){
 Ye_Ar[[i]]<-list()
 for(j in 1:3){
@@ -18,23 +16,27 @@ Ye_Ar<-Ye_Ar[c(-2,-4,-6)]
 names(Ye_Ar)<-c("wheat","maize","rice","soyb")
 
 #Starting to use the HYDE cropland area
-setwd("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/Cropland")
+setwd("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/Cropland")
 cropfiles<-list.files(pattern="*.asc")
 To<-list()
 for(i in 1:length(cropfiles)){
   To[[i]]<-raster(cropfiles[[i]])
 }
 
+#aggregate to 0.5x0.5 and transf. to Ha
 ToT<-stack(To)
 ToT<-subset(ToT,c(1:5))
 ToT0.5<-aggregate(ToT, fact=6, fun=sum)*100
 crs(ToT0.5)="+proj=longlat +datum=WGS84"
 
+#function to avoid higherSPAM values than HYDE
 fix<-function(a,b){
   ifelse(a > b,a,b)
 }
 
+#calculation of the relative variation per decade from HYDE and application to SPAM
 AreaCrl<-list()
+AreaC<-list()
 for(j in 1:4){
 ToT0.5[[5]]<-overlay(Ye_Ar[[j]][[1]],ToT0.5[[5]],fun=fix)
 #Create the % of area from 1990 based on 2000
@@ -84,4 +86,4 @@ names(out.rast)<-c("wheat","maize","rice","soyb")
 #out.rast tested as below
 #out.rast[[4]][[51]]-AreaCrl[[4]][[7]]#should be 0
 #plot(out.rast[[4]][[51]])#same pattern for same crop
-out.rast[[4]][[31]]-out.rast[[4]][[32]]#continuous layers should be different
+#out.rast[[4]][[31]]-out.rast[[4]][[32]]#continuous layers should be different

@@ -1,15 +1,13 @@
 #source("Z:/Scripts/Global_evaluation/Global_Evaluation/SpamAreasInput.R")
-install.packages("rlist")
-library("ncdf4")
-library("raster")
-library(rgdal)
+library(ncdf4)
+library(raster)
 library(rlist)
-#Calling the Maize area database from SPAM
 
+#Subsetting irrigated areas from SPAM
 Ir_Ar<-Areas[c(-2,-4,-6,-8)]
 
 #Starting to use the HYDE cropland area
-setwd("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/TotIrrig")
+setwd("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/TotIrrig")
 irrfiles<-list.files(pattern="*.asc")
 To<-list()
 for(i in 1:length(irrfiles)){
@@ -21,6 +19,7 @@ ToT<-subset(ToT,c(1:5))
 ToTi0.5<-aggregate(ToT, fact=6, fun=sum)*100# 100 to convert from Km2 to ha
 crs(ToTi0.5)="+proj=longlat +datum=WGS84"
 
+#Function to avoid higher irrigated than total area
 ir_correc<-function(a,b){
   ifelse(a-b<0,a,b)
 }
