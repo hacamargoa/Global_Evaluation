@@ -1,12 +1,13 @@
 #Country correction by country
 #install.packages("rworldmap")
 library(rworldmap)
-library(raster)
+
+#Country aggregation from total crop area
 year<-rep(1960:2010, each=185)
 agg_list<-list()
 for(j in 1:length(out.rast)){
 agg_listc<-list()
-for(i in 1:51){ 
+for(i in 1:51){
   agg_listc[[i]]<-as(out.rast[[j]][[i]], 'SpatialGridDataFrame')
   agg_listc[[i]]<-aggregateHalfDegreeGridToCountries(agg_listc[[i]])
   agg_listc[[i]]<-joinCountryData2Map(agg_listc[[i]],nameJoinColumn ='UN',joinCode = "UN")
@@ -22,19 +23,17 @@ agg_list[[j]]<-subset(agg_list[[j]],year!=1960)
 }
 
 # reported Area
-FWhe<- read.csv("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOWheaBC.csv", h=T)
-FMai<- read.csv("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOMaizBC.csv", h=T)
-FRic<- read.csv("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAORiceBC.csv", h=T)
-FSoy<- read.csv("C:/Users/Hector/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOSoybBC.csv", h=T)
-FAO<-list(FWhe,FMai,FRic,FSoy)
+FWhe<- read.csv("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOWheaBC.csv", h=T)
+FMai<- read.csv("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOMaizBC.csv", h=T)
+FRic<- read.csv("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAORiceBC.csv", h=T)
+#FSoy<- read.csv("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_inputs/FAO/FAOSoybBC.csv", h=T)
+FAO<-list(FWhe,FMai,FRic)
 FAre<-lapply(FAO,subset,select=c(1,2,3,4))
 FAre<-lapply(FAre,setNames,nm=c("UN","Country","year","FArea"))
 FAre<-lapply(FAre,subset,year<2011)
-
-# countries<-as.data.frame(gridCountriesDegreesHalf)
-# names(countries)<-c("UN","x","y")
-# dim(countries)
-# countries2<-cbind(year=rep(c(1961:2010),each=85700),do.call("rbind",replicate(50,countries,simplify = FALSE)))
+countries<-as.data.frame(gridCountriesDegreesHalf)
+names(countries)<-c("UN","x","y")
+countries2<-cbind(year=rep(c(1961:2010),each=85700),do.call("rbind",replicate(50,countries,simplify = FALSE)))
 
 Ar<-list()
 for (i in 1:length(FAre)){
@@ -51,11 +50,12 @@ Ar[[i]]$perc<-ifelse(Ar[[i]]$perc==Inf,1,Ar[[i]]$perc)
 Rf_corr<-function(a){
   ifelse(is.na(a),0,a)
 }
-
+bb <- extent(-180, 180, -90, 90)
 percr<-list()
 ArNew<-list()
 ArNewi<-list()
 ArNewr<-list()
+crop<-c("Wheat","Maize","Rice")
 for(i in 1:length(Ar)){
 perc<-list()
 for(j in 1:50){
@@ -73,6 +73,8 @@ ArNew[[i]]<-ArNew[[i]]/percr[[i]]
 ArNewi[[i]]<-ArNewi[[i]]/percr[[i]]
 ArNewi[[i]][is.na(ArNewi[[i]])]<-0
 ArNewr[[i]]<-ArNew[[i]]-ArNewi[[i]]
+writeRaster(ArNew[[i]],paste0("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_outputs/Area/SPAMest_",cropn[i],"_1960_2010.nc"),"CDF",overwrite=TRUE)
+writeRaster(ArNewi[[i]],paste0("C:/Users/hac809/Documents/Pughtam-cropozone/Global_evaluation_outputs/Area/SPAMest_",cropn[i],"irr_1960_2010.nc"),"CDF",overwrite=TRUE)
 }
 
 # Testing Areas
@@ -93,7 +95,6 @@ AreaBC[[i]]<- cbind(year,AreaBC[[i]])
 }
 test.Areas<-list()
 par(mfrow=c(2,2))
-crop<-c("Wheat","Maize","Rice","Soybean")
 for(i in 1:length(ArNew)){
 test.Areas[[i]]<-merge(FAre[[i]],AreaBC[[i]],by=c("year","UN"), all=TRUE)
 test.Areas[[i]]<-subset(test.Areas[[i]],!is.na(Area))

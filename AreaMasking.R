@@ -173,6 +173,8 @@ for (i in 1:3){
   Lin_Fprod[[i]]<-lm(FGlobal[,3*i-1]~FGlobal$year)
 }
 
+
+
 #Graph 1 red color is FAO, blue LPJG
 X11(width=8,height=8)
 par(mfrow=c(3,2))

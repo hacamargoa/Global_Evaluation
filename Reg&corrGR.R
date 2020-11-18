@@ -5,8 +5,8 @@ require(plyr)
 library(dplyr)
 require(forecast)
 library(rworldmap)
-#Transforming LPJ and Ray data to data frames
 
+#Transforming LPJ and Ray data to data frames
 Deraster<-function(x){
 df<-list()
 for(i in 1:nlayers(x)){
@@ -188,7 +188,9 @@ par(mfrow=c(3,1),omi=c(0.0,0.0,0.0,0.0),mai=c(0.65,0.5,0.65,0.1))
 lines<-list()
   for (i in 1:3){
   lines[[i]]<-join(regGRY1[[i]][,c(4,5,2)],prod_Raydf1[[i]][,c(2,3,6)],type = "inner")
+  lines[[i]]<-subset(lines[[i]],Prod2>0.05)
   plot(lines[[i]][,4]*1000,lines[[i]][,3],xlab="", ylab="", main="")
+  abline(0,0)
   title( main=paste0(crop[i]),line=2,font=2, font.lab=2,cex.lab=2,cex.main=2,cex.axis=1.5)
   title( ylab="Slope Difference", xlab=if(i==3){"Production (Thousand Tons)"},line=2.5,cex.lab=1.5,font=2, font.lab=2)
   }
