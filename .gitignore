@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 .git
-Global_Evaluation
-.gitignore
+Global_Evaluation.Rproj
+
