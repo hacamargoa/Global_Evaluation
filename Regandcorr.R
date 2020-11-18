@@ -40,13 +40,14 @@ RegG<-data.frame(var,yield=unlist(GYparms),Prod=unlist(GPparms))
 
 #moving average detrend
 detrend<-function(x){
-  dt<-ma(x,order=5,centre=TRUE)
+  dt<-ma(x,order=7,centre=TRUE)
   dt_res<- x-dt
   dt_res<-subset(dt_res,!is.na(dt_res))
 }
 #GLOBAL CORR
 Corr_Glob<-list()
 Corr_GlobP<-list()
+Corr_GlobY2<-list()
 yielddt<-list()
 X11(width=4,height=8)
 par(mfrow=c(3,1))
@@ -57,6 +58,7 @@ for (i in 1:3){
   Ldtp<-detrend(LGlobal[,3*i-1])
   Corr_Glob[[i]]<-cor.test(Fdty,Ldty)
   Corr_GlobP[[i]]<-cor.test(Fdtp,Ldtp)
+  Corr_GlobY2[[i]]<-cor.test(Fdty[c(19:42)],Ldty[c(19:42)])
   plot(Year=c(1962:2009),Fdty,col="red",type="l",main=cropn[i], font=2, font.lab=2, cex.lab=2,cex.main=2,cex.axis=1.5,ylab="",xlab="",lwd=2)
   title( ylab="Detrended Yield (t/ha)", line=2.5, cex.lab=2,font=2, font.lab=2)
   lines(Year=c(1962:2009),Ldty,col="blue",lwd=2) 
@@ -196,7 +198,8 @@ regfun<-function(x){
   BCP=lm(LProd~yearn*Dummy,data=x)
   BCY=lm(LYield~yearn*Dummy,data=x)
   return(data.frame(Slopep=BCP$coefficients[4],pvp=summary(BCP)$coefficients[4, 4],
-                    Slopey=BCY$coefficients[4],pvy=summary(BCY)$coefficients[4, 4]))
+                    Slopey=BCY$coefficients[4],pvy=summary(BCY)$coefficients[4, 4],
+                    SlopeF=BCY$coefficients[2]+BCY$coefficients[4]))
 }
 
 DummyBC<-list()
@@ -226,14 +229,52 @@ for(i in 1:3){
                colourPalette = c("red4","red","hotpink1","plum1","white","steelblue1","steelblue3","blue"),
                borderCol = "black",oceanCol="azure2", xlim=c(-180,180),ylim=c(57,90),addLegend=FALSE)
   if(i==3){do.call(addMapLegend,c(mapP, legendMar=0,legendLabels="all", legendWidth=0.8,digits=0))}
-  title( main =paste0("Diff. ",crop[i]," (Mill.Tons/yr)"), line=-6, cex.main=2,font.main=2)
+  title( main =paste0("Diff. ",cropn[i]," (Mill.Tons/yr)"), line=-6, cex.main=2,font.main=2)
   mapY<-mapCountryData(slopemap[[i]], nameColumnToPlot="Slopey", numCats=30,missingCountryCol = gray(0.8),
                catMethod = c(-0.3,-0.2,-0.1,-0.00001,0,0.1,0.2,0.3,0.4,0.5,0.6), mapTitle = "",
-               colourPalette = c("red4","red","hotpink1","white","deepskyblue1","dodgerblue","steelblue1","steelblue3","blue","blue4"),
+               colourPalette = c("red4","red","hotpink1","white","powderblue","deepskyblue","dodgerblue","steelblue","blue","blue4"),
                borderCol = "black",oceanCol="azure2", xlim=c(-180,180),ylim=c(57,90),addLegend=FALSE)
   if(i==3){do.call(addMapLegend,c(mapY, legendMar=0,legendLabels="all", legendWidth=0.8))}
-  title( main = paste0("Diff. ",crop[i]," (t/ha*yr)"), line=-6, cex.main=2,font.main=2)
+  title( main = paste0("Diff. ",cropn[i]," (t/ha*yr)"), line=-6, cex.main=2,font.main=2)
 }
+
+#map for GDP and FAO Slope
+GDP<-read.csv("C:/Users/hac809/Documents/Pughtam-cropozone/Harvest Index/GDPpC.csv",h=T)
+GDPbC10<-data.frame(Country=GDP[,1],Code=GDP[,2],GDP=GDP[,53])
+X11(width=4,height=5)
+par(mfrow=c(1,1),omi=c(0,0,0,0),mai=c(0,0,0,0))  
+GDPmap<-joinCountryData2Map(GDPbC10,joinCode="ISO3", nameJoinColumn="Code")
+mapP<-mapCountryData(GDPmap, nameColumnToPlot="GDP", numCats=30,missingCountryCol = gray(0.8),
+                     catMethod = c(0,2000,5000,10000,30000,100000), mapTitle = "",
+                     colourPalette = c("pink","red","purple","blue","darkblue"),
+                     borderCol = "black",oceanCol="azure2", xlim=c(-180,180),ylim=c(57,90),addLegend=FALSE)
+do.call(addMapLegend,c(mapP, legendMar=4,legendLabels="all", legendWidth=0.5,legendShrink=0.8,legendIntervals="page"))
+title( main = "Gross Domestic Product (USD)", line=-6, cex.main=1.5,font.main=2)
+
+regfunF<-function(x){
+  BCYF=lm(FYield~yearn,data=x)
+  return(data.frame(SlopeF=BCYF$coefficients[2],pvF=summary(BCYF)$coefficients[2,4]))
+}
+
+X11(width=4.1,height=9)
+par(mfrow=c(3,1),omi=c(0.3,0,0,0),mai=c(0,0,0,0))  
+regBCF<-list()
+SlopeF1<-list()
+for (i in 1:3){
+regBCF[[i]]<-DataBC1[[i]]
+regBCF[[i]]$yearn<-regBCF[[i]]$year-1960
+regBCF[[i]]<-ddply(regBCF[[i]], .(UN),regfunF)
+regBCF[[i]]$SlopeF<-ifelse(regBCF[[i]]$pvF>0.05,0,regBCF[[i]]$SlopeF)
+SlopeF1[[i]]<-joinCountryData2Map(regBCF[[i]],joinCode="UN", nameJoinColumn="UN")
+mapF<-mapCountryData(SlopeF1[[i]], nameColumnToPlot="SlopeF", numCats=30,missingCountryCol = gray(0.8),
+                     catMethod = c(-0.1,-0.05,-0.001,0.001,0.05,0.1,0.15,0.2), mapTitle = "",
+                     colourPalette = c("red4","red", "white","lightblue", "steelblue1","blue", "darkblue"),
+                     borderCol = "black",oceanCol="azure2", xlim=c(-180,180),ylim=c(57,90),addLegend=FALSE)
+if(i==3){do.call(addMapLegend,c(mapF, legendMar=0,legendLabels="all", legendWidth=0.8,digits=2))}
+title( main = paste0("FAO Yield Slope ",cropn[i]," (t/ha*yr)"), line=-6, cex.main=2,font.main=2)
+}
+
+
 
 #line to check the number of countries and the non-significant, negatives or positives for Slopep and Slopey
 length(na.omit(slopemap[[1]]$Slopey))

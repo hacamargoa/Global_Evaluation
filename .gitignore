@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.git
+Global_Evaluation
+.gitignore

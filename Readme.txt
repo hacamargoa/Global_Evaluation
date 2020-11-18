@@ -19,3 +19,4 @@ Option 2
 -Regandcorr.R
 -Reg&corrGR.R
 -Spinup
+-Constant-inputs.R
